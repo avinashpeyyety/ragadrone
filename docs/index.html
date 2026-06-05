@@ -129,7 +129,7 @@
         <span>Drone on (harmonium Sa + Pa)</span>
       </label>
       <label for="droneVol">Drone level</label>
-      <input type="range" id="droneVol" min="0" max="100" value="55" />
+      <input type="range" id="droneVol" min="0" max="100" value="70" />
     </div>
 
     <div class="columns">
@@ -143,9 +143,10 @@
         <select id="raga"></select>
         <p class="swaras" id="swara-line"></p>
         <label for="loopVol">Loop level</label>
-        <input type="range" id="loopVol" min="0" max="100" value="30" />
+        <input type="range" id="loopVol" min="0" max="100" value="50" />
         <label for="density">Loop density</label>
         <input type="range" id="density" min="1" max="5" value="3" />
+        <p class="swaras" id="density-hint">Sparse at 1 · busier at 5 · biased to vadi/samvadi</p>
       </div>
 
       <div class="panel">
@@ -168,12 +169,43 @@
   </div>
 
   <script>
+    // shruti: semitone index → cents offset from 12-TET (komal ~−48, tivra Ma ~+55)
+    const TIMBRE = {
+      bright: {
+        droneFilter: 1280, loopFilter: 1950, harmonicityDr: 1.65, harmonicityLp: 2.15,
+        chorusWet: 0.28, vibDepth: 0.1, loopAttack: 0.05, loopRelease: 1.15, loopVel: 0.52, sparseOct: 0.22,
+      },
+      mellow: {
+        droneFilter: 1150, loopFilter: 1550, harmonicityDr: 1.55, harmonicityLp: 1.9,
+        chorusWet: 0.24, vibDepth: 0.09, loopAttack: 0.08, loopRelease: 1.35, loopVel: 0.48, sparseOct: 0.16,
+      },
+      dark: {
+        droneFilter: 920, loopFilter: 1100, harmonicityDr: 1.35, harmonicityLp: 1.65,
+        chorusWet: 0.16, vibDepth: 0.07, loopAttack: 0.14, loopRelease: 1.75, loopVel: 0.42, sparseOct: 0.08,
+      },
+    };
+
     const RAGAS = {
-      yaman:   { name: "Yaman",   swaras: "S R G M♯ P D N", notes: [0, 2, 4, 6, 7, 9, 11], vadi: 6 },
-      bhairav: { name: "Bhairav", swaras: "S r G m P d N",  notes: [0, 1, 4, 5, 7, 8, 11], vadi: 1 },
-      malkauns:{ name: "Malkauns",swaras: "S g m d S",      notes: [0, 3, 5, 8],             vadi: 5 },
-      kafi:    { name: "Kafi",    swaras: "S R g M P D n",  notes: [0, 2, 3, 5, 7, 9, 10], vadi: 9 },
-      darbari: { name: "Darbari", swaras: "S r g m P d n",  notes: [0, 1, 3, 5, 7, 8, 10], vadi: 1 },
+      yaman: {
+        name: "Yaman", swaras: "S R G M♯ P D N", notes: [0, 2, 4, 6, 7, 9, 11],
+        vadi: 4, samvadi: 11, timbre: "bright", shruti: { 6: 55 },
+      },
+      bhairav: {
+        name: "Bhairav", swaras: "S r G m P d N", notes: [0, 1, 4, 5, 7, 8, 11],
+        vadi: 1, samvadi: 7, timbre: "dark", shruti: { 1: -48, 5: -42, 8: -48 },
+      },
+      malkauns: {
+        name: "Malkauns", swaras: "S g m d S", notes: [0, 3, 5, 8],
+        vadi: 5, samvadi: 0, timbre: "dark", shruti: { 3: -48, 5: -42, 8: -48 },
+      },
+      kafi: {
+        name: "Kafi", swaras: "S R g M P D n", notes: [0, 2, 3, 5, 7, 9, 10],
+        vadi: 9, samvadi: 5, timbre: "mellow", shruti: { 3: -48, 10: -48 },
+      },
+      darbari: {
+        name: "Darbari", swaras: "S r g m P d n", notes: [0, 1, 3, 5, 7, 8, 10],
+        vadi: 1, samvadi: 5, timbre: "dark", shruti: { 1: -48, 3: -48, 5: -42, 8: -48, 10: -48 },
+      },
     };
 
     // One bol per matra (synthetic tabla POC). '|' = vibhag in display only.
@@ -238,8 +270,13 @@
 
     const ROOTS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const SWARA_LABEL = ["Sa", "r", "R", "g", "G", "m", "M♯", "P", "d", "D", "n", "N"];
 
-    let droneSynth, loopSynth, reverb, droneGain, loopGain, tablaGain;
+    function swaraLabel(semitone) {
+      return SWARA_LABEL[((semitone % 12) + 12) % 12];
+    }
+
+    let droneSynth, loopSynth, droneChain, loopChain, reverb, droneGain, loopGain, tablaGain;
     let bayan, dayan, tik;
     let tablaSeq = null;
     let loopInterval = null;
@@ -262,10 +299,20 @@
       return 48 + ROOTS.indexOf(rootEl.value);
     }
 
-    function noteName(semitoneFromSa) {
-      const m = rootMidi() + semitoneFromSa;
-      const oct = Math.floor(m / 12) - 1;
-      return NOTE_NAMES[m % 12] + oct;
+    function currentRaga() {
+      return RAGAS[ragaEl.value];
+    }
+
+    function currentTimbre() {
+      return TIMBRE[currentRaga().timbre] || TIMBRE.mellow;
+    }
+
+    /** Frequency in Hz with optional shruti (cents) per swara. */
+    function noteFreq(semitoneFromSa, octaveAdd = 0) {
+      const r = currentRaga();
+      const midi = rootMidi() + semitoneFromSa + octaveAdd;
+      const cents = (r.shruti && r.shruti[semitoneFromSa]) || 0;
+      return Tone.Frequency(midi, "midi").transpose(cents).toFrequency();
     }
 
     function currentTaal() {
@@ -273,12 +320,17 @@
     }
 
     function updateLines() {
-      const r = RAGAS[ragaEl.value];
+      const r = currentRaga();
       const t = currentTaal();
-      swaraLine.textContent = r.swaras + " · harmonium loop in scale";
+      swaraLine.textContent = `${r.swaras} · shruti tuning · ${r.timbre} harmonium`;
       taalLine.textContent = `${t.matras} matras (${t.vibhag}) · ${t.display}`;
     }
-    ragaEl.onchange = updateLines;
+    ragaEl.onchange = () => {
+      updateLines();
+      applyRagaTimbre();
+      if (running) syncDrone();
+      if (running) statusEl.textContent = "Playing — " + playbackLabel();
+    };
     taalEl.onchange = () => {
       updateLines();
       if (running) rebuildTablaSeq();
@@ -286,15 +338,17 @@
     updateLines();
 
     function pickLoopNote() {
-      const r = RAGAS[ragaEl.value];
+      const r = currentRaga();
+      const t = currentTimbre();
       const notes = r.notes;
       const roll = Math.random();
       let sem;
-      if (roll < 0.2) sem = 0;
-      else if (roll < 0.35 && r.vadi != null) sem = r.vadi;
+      if (roll < 0.26) sem = 0;
+      else if (roll < 0.48) sem = r.vadi;
+      else if (roll < 0.62) sem = r.samvadi;
       else sem = notes[Math.floor(Math.random() * notes.length)];
-      const octave = Math.random() < 0.25 ? 12 : 0;
-      return noteName(sem + octave);
+      const octave = Math.random() < t.sparseOct ? 12 : 0;
+      return { freq: noteFreq(sem, octave), vel: t.loopVel * (0.85 + Math.random() * 0.2) };
     }
 
     function playBol(bol, time, matraIndex) {
@@ -340,53 +394,79 @@
 
     /** Reed-style harmonium: detuned saws, AM, vibrato, chorus, mellow filter. */
     function makeHarmonium(dest, { drone = false } = {}) {
-      const vib = new Tone.Vibrato({ frequency: 5.5, depth: 0.14, wet: 0.4 });
-      const chorus = new Tone.Chorus({ frequency: 1.2, delayTime: 4, depth: 0.45, wet: 0.35 }).start();
+      const preset = currentTimbre();
+      const vib = new Tone.Vibrato({ frequency: 5.2, depth: preset.vibDepth, wet: 0.22 });
+      const chorus = new Tone.Chorus({ frequency: 1.1, delayTime: 4.2, depth: 0.35, wet: preset.chorusWet }).start();
       const filt = new Tone.Filter({
-        frequency: drone ? 1100 : 1600,
+        frequency: drone ? preset.droneFilter : preset.loopFilter,
         type: "lowpass",
         rolloff: -24,
-        Q: drone ? 1.8 : 2.4,
+        Q: drone ? 1.7 : 2.2,
       });
       const trem = new Tone.Tremolo({
-        frequency: drone ? 3.2 : 4.5,
-        depth: drone ? 0.06 : 0.04,
-        wet: drone ? 0.2 : 0.12,
+        frequency: drone ? 3 : 4.2,
+        depth: drone ? 0.05 : 0.035,
+        wet: drone ? 0.18 : 0.1,
       }).start();
 
       const synth = new Tone.PolySynth(Tone.AMSynth, {
-        harmonicity: drone ? 1.6 : 2,
+        harmonicity: drone ? preset.harmonicityDr : preset.harmonicityLp,
         oscillator: { type: "sawtooth" },
         envelope: drone
-          ? { attack: 1.4, decay: 0.4, sustain: 0.9, release: 3.2 }
-          : { attack: 0.06, decay: 0.22, sustain: 0.65, release: 1.1 },
+          ? { attack: 1.5, decay: 0.38, sustain: 0.92, release: 3.4 }
+          : { attack: preset.loopAttack, decay: 0.2, sustain: 0.6, release: preset.loopRelease },
         modulation: { type: "sine" },
         modulationEnvelope: {
           attack: 0.04,
-          decay: 0.15,
-          sustain: drone ? 0.45 : 0.3,
-          release: 0.7,
+          decay: 0.14,
+          sustain: drone ? 0.42 : 0.28,
+          release: 0.65,
         },
-        volume: drone ? -14 : -11,
+        volume: drone ? -6 : -4,
       });
 
       synth.chain(vib, chorus, filt, trem, dest);
-      return synth;
+      return { synth, filter: filt, vib, chorus, trem, drone };
+    }
+
+    function applyRagaTimbre() {
+      if (!loopChain || !droneChain) return;
+      const p = currentTimbre();
+      const ramp = 0.4;
+      droneChain.filter.frequency.rampTo(p.droneFilter, ramp);
+      loopChain.filter.frequency.rampTo(p.loopFilter, ramp);
+      loopChain.vib.depth = p.vibDepth;
+      loopChain.chorus.wet.value = p.chorusWet;
+      droneChain.synth.set({ harmonicity: p.harmonicityDr });
+      loopChain.synth.set({
+        harmonicity: p.harmonicityLp,
+        envelope: {
+          attack: p.loopAttack,
+          decay: 0.2,
+          sustain: 0.6,
+          release: p.loopRelease,
+        },
+      });
     }
 
     async function ensureAudio() {
       await Tone.start();
       if (audioReady) return;
 
-      reverb = new Tone.Reverb({ decay: 9, wet: 0.38 }).toDestination();
+      const master = new Tone.Gain(1).toDestination();
+      reverb = new Tone.Reverb({ decay: 7, wet: 0.22 });
       await reverb.generate();
+      reverb.connect(master);
 
       droneGain = new Tone.Gain(0).connect(reverb);
       loopGain = new Tone.Gain(0).connect(reverb);
       tablaGain = new Tone.Gain(0).connect(reverb);
 
-      droneSynth = makeHarmonium(droneGain, { drone: true });
-      loopSynth = makeHarmonium(loopGain, { drone: false });
+      droneChain = makeHarmonium(droneGain, { drone: true });
+      loopChain = makeHarmonium(loopGain, { drone: false });
+      droneSynth = droneChain.synth;
+      loopSynth = loopChain.synth;
+      applyRagaTimbre();
 
       bayan = new Tone.MembraneSynth({
         pitchDecay: 0.008,
@@ -452,7 +532,7 @@
     }
 
     function droneGainLevel() {
-      return (+document.getElementById("droneVol").value / 100) * 0.45;
+      return (+document.getElementById("droneVol").value / 100) * 0.85;
     }
 
     function rebuildTablaSeq() {
@@ -500,11 +580,12 @@
     function syncDrone() {
       if (!droneSynth || !running) return;
       if (shouldDrone()) {
-        const sa = noteName(0);
-        const pa = noteName(7);
-        const saLow = noteName(-12);
         droneSynth.releaseAll();
-        droneSynth.triggerAttack([saLow, sa, pa], Tone.now());
+        droneSynth.triggerAttack(
+          [noteFreq(0, -12), noteFreq(0, 0), noteFreq(7, 0)],
+          Tone.now(),
+          0.92
+        );
       } else {
         stopDrone();
       }
@@ -516,17 +597,24 @@
       if (!ragaEnabled() || !running) return;
       const bpm = sessionBpm();
       const density = +document.getElementById("density").value;
-      const ms = (60 / bpm) * 1000 * (6 - density) * 0.5;
+      const t = currentTimbre();
+      const ms = (60 / bpm) * 1000 * (6.5 - density) * 0.55;
       loopInterval = setInterval(() => {
         if (!running || !ragaEnabled()) return;
-        loopSynth.triggerAttackRelease(pickLoopNote(), "8n", Tone.now(), 0.35 + Math.random() * 0.25);
-      }, Math.max(180, ms));
+        const n = pickLoopNote();
+        loopSynth.triggerAttackRelease(n.freq, "8n", Tone.now(), n.vel);
+      }, Math.max(220, ms * (t.sparseOct < 0.12 ? 1.35 : 1)));
     }
 
     function playbackLabel() {
       const parts = [];
       if (shouldDrone()) parts.push("drone");
-      if (ragaEnabled()) parts.push(RAGAS[ragaEl.value].name + " loop");
+      if (ragaEnabled()) {
+        const r = currentRaga();
+        parts.push(
+          `${r.name} (${r.timbre}, vadi ${swaraLabel(r.vadi)}, samvadi ${swaraLabel(r.samvadi)})`
+        );
+      }
       if (tablaEnabled()) parts.push(currentTaal().name);
       return parts.length ? parts.join(" · ") : "nothing enabled";
     }
@@ -534,9 +622,9 @@
     function setVolumes() {
       if (!droneGain) return;
       droneGain.gain.rampTo(shouldDrone() ? droneGainLevel() : 0, 0.2);
-      loopGain.gain.rampTo(ragaEnabled() ? +document.getElementById("loopVol").value / 100 * 0.5 : 0, 0.2);
+      loopGain.gain.rampTo(ragaEnabled() ? +document.getElementById("loopVol").value / 100 * 0.8 : 0, 0.2);
       tablaGain.gain.rampTo(
-        tablaEnabled() ? +document.getElementById("tablaVol").value / 100 * 0.85 : 0,
+        tablaEnabled() ? +document.getElementById("tablaVol").value / 100 * 0.9 : 0,
         0.2
       );
     }
@@ -559,7 +647,9 @@
     ["droneVol", "loopVol", "density", "tablaVol"].forEach((id) => {
       document.getElementById(id).oninput = () => {
         setVolumes();
-        if (running && id === "droneVol") syncDrone();
+        if (!running) return;
+        if (id === "droneVol") syncDrone();
+        if (id === "density" && ragaEnabled()) scheduleLoop();
       };
     });
     ["ragaOn", "tablaOn", "droneOn"].forEach((id) => {
@@ -615,13 +705,11 @@
       statusEl.classList.remove("on");
     };
 
-    ragaEl.onchange = () => {
-      updateLines();
-      if (running) syncDrone();
-      if (running) statusEl.textContent = "Playing — " + playbackLabel();
-    };
     rootEl.onchange = () => {
-      if (running) syncDrone();
+      if (running) {
+        syncDrone();
+        if (ragaEnabled()) scheduleLoop();
+      }
     };
   </script>
 </body>
