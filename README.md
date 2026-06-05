@@ -4,14 +4,18 @@ Quick proof of concept: **tanpura-style drone** (Sa + Pa) + **random ambient not
 
 ## Run
 
+**Online (HTTPS):** https://avinashpeyyety.github.io/nakshatra/raga-drone/
+
+**Local:**
+
 ```bash
-cd raga-drone-poc
+cd raga-drone
 python3 -m http.server 8766
 ```
 
-Open http://127.0.0.1:8766 — click **Start** (browser requires a user gesture for audio).
+Open http://127.0.0.1:8766 (use **http**, not https) — click **Start** (browser requires a user gesture for audio).
 
-Or open `index.html` directly; some browsers block CDN/Web Audio on `file://` — prefer the local server.
+`https://avinashpeyyety.github.io/raga-drone/` will 404 until GitHub Pages is enabled on this private repo (GitHub Pro). Use the **nakshatra** link above instead.
 
 ## Ragas (12-TET)
 
