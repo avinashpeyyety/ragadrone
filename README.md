@@ -1,6 +1,6 @@
 # Raga Drone — POC
 
-Quick proof of concept: **harmonium-style drone** (Sa + Pa, reed-like synth) + **scale-locked harmonium phrases** + **synthetic tabla taals**.
+Quick proof of concept: **harmonium-style drone** (Sa + Pa, shruti-aware) + **scale-locked loop** (vadi/samvadi bias, per-raga timbre) + **synthetic tabla taals**.
 
 ## Run
 
@@ -17,15 +17,17 @@ Open http://127.0.0.1:8766 — click **Start** (browser requires a user gesture 
 
 Independent of [Nakshatra Chakram](https://avinashpeyyety.github.io/nakshatra/) — separate repo and site.
 
-## Ragas (12-TET)
+## Ragas
 
-| Raga | Scale (from Sa) |
-|------|-----------------|
-| Yaman | S R G M♯ P D N |
-| Bhairav | S r G m P d N |
-| Malkauns | S g m d |
-| Kafi | S R g M P D n |
-| Darbari | S r g m P d n |
+| Raga | Scale (from Sa) | Timbre | Notes |
+|------|-----------------|--------|-------|
+| Yaman | S R G M♯ P D N | bright | tivra Ma (+55¢) |
+| Bhairav | S r G m P d N | dark | komal Re/Dha (−48¢) |
+| Malkauns | S g m d | dark | komal Ga, komal Ma/Dha |
+| Kafi | S R g M P D n | mellow | komal Ga, komal Ni |
+| Darbari | S r g m P d n | dark | komal swaras throughout |
+
+Base pitch is **12-TET from Sa**; komal/tivra offsets are **interpretive POC** (not a full shruti engine). Loop notes favor **vadi** and **samvadi**; density 1–5 controls spacing.
 
 ## Tabla taals (synthetic)
 
@@ -48,9 +50,8 @@ One bol per matra, synced to **Session tempo (BPM)** via Tone.Transport (optiona
 
 ## Not in this POC
 
-- Shruti / microtones
-- Recorded tanpura / tabla samples
-- Proper vadi–samvadi phrasing
+- Recorded harmonium / tanpura / tabla samples
+- Composed pakad phrases or arohanam/avarohanam rules
 - Export, mobile app shell
 
 ## Stack
