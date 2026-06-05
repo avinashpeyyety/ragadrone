@@ -43,8 +43,8 @@ One bol per matra, synced to **Session tempo (BPM)** via Tone.Transport (optiona
 
 ## Layout
 
-- **Session** — shared root (Sa) and tempo for loop + tabla  
-- **Raga** | **Tabla** — side-by-side panels; each can toggle loop/tabla and drone (one shared drone sound)
+- **Session** — root (Sa), tempo, harmonium drone on/level  
+- **Raga** | **Tabla** — side-by-side; loop and tabla toggles only
 
 ## Not in this POC
 

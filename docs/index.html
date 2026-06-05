@@ -124,7 +124,12 @@
           <option value="120">120</option>
         </select>
       </div>
-      <p class="swaras" style="margin-top:0">One drone sound if both columns enable it — not two layers.</p>
+      <label class="check">
+        <input type="checkbox" id="droneOn" checked />
+        <span>Drone on (harmonium Sa + Pa)</span>
+      </label>
+      <label for="droneVol">Drone level</label>
+      <input type="range" id="droneVol" min="0" max="100" value="55" />
     </div>
 
     <div class="columns">
@@ -137,12 +142,6 @@
         <label for="raga">Raga</label>
         <select id="raga"></select>
         <p class="swaras" id="swara-line"></p>
-        <label class="check">
-          <input type="checkbox" id="ragaDroneOn" checked />
-          <span>Drone on</span>
-        </label>
-        <label for="ragaDroneVol">Drone level</label>
-        <input type="range" id="ragaDroneVol" min="0" max="100" value="55" />
         <label for="loopVol">Loop level</label>
         <input type="range" id="loopVol" min="0" max="100" value="30" />
         <label for="density">Loop density</label>
@@ -155,12 +154,6 @@
           <input type="checkbox" id="tablaOn" checked />
           <span>Tabla on</span>
         </label>
-        <label class="check">
-          <input type="checkbox" id="tablaDroneOn" />
-          <span>Drone on</span>
-        </label>
-        <label for="tablaDroneVol">Drone level</label>
-        <input type="range" id="tablaDroneVol" min="0" max="100" value="55" />
         <label for="taal">Taal</label>
         <select id="taal"></select>
         <p class="taal-line" id="taal-line"></p>
@@ -454,23 +447,12 @@
     };
     updateTablaTempoRow();
 
-    function ragaDroneWants() {
-      return document.getElementById("ragaDroneOn").checked;
-    }
-
-    function tablaDroneWants() {
-      return document.getElementById("tablaDroneOn").checked;
-    }
-
     function shouldDrone() {
-      return ragaDroneWants() || tablaDroneWants();
+      return document.getElementById("droneOn").checked;
     }
 
     function droneGainLevel() {
-      let v = 0;
-      if (ragaDroneWants()) v = Math.max(v, +document.getElementById("ragaDroneVol").value / 100);
-      if (tablaDroneWants()) v = Math.max(v, +document.getElementById("tablaDroneVol").value / 100);
-      return v * 0.45;
+      return (+document.getElementById("droneVol").value / 100) * 0.45;
     }
 
     function rebuildTablaSeq() {
@@ -574,13 +556,13 @@
       statusEl.textContent = "Playing — " + playbackLabel();
     }
 
-    ["ragaDroneVol", "tablaDroneVol", "loopVol", "density", "tablaVol"].forEach((id) => {
+    ["droneVol", "loopVol", "density", "tablaVol"].forEach((id) => {
       document.getElementById(id).oninput = () => {
         setVolumes();
-        if (running && (id === "ragaDroneVol" || id === "tablaDroneVol")) syncDrone();
+        if (running && id === "droneVol") syncDrone();
       };
     });
-    ["ragaOn", "ragaDroneOn", "tablaOn", "tablaDroneOn"].forEach((id) => {
+    ["ragaOn", "tablaOn", "droneOn"].forEach((id) => {
       document.getElementById(id).onchange = onMixChange;
     });
     document.getElementById("start").onclick = async () => {
