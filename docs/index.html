@@ -101,11 +101,11 @@
           <label for="sessionTempo">Tempo (BPM)</label>
           <select id="sessionTempo">
             <option value="50">50</option>
-            <option value="60" selected>60</option>
+            <option value="60">60</option>
             <option value="72">72</option>
             <option value="90">90</option>
             <option value="110">110</option>
-            <option value="120">120</option>
+            <option value="120" selected>120</option>
           </select>
         </div>
       </div>
@@ -117,11 +117,11 @@
         <label for="tablaTempo">Tabla tempo (BPM)</label>
         <select id="tablaTempo">
           <option value="50">50</option>
-          <option value="60" selected>60</option>
+          <option value="60">60</option>
           <option value="72">72</option>
           <option value="90">90</option>
           <option value="110">110</option>
-          <option value="120">120</option>
+          <option value="120" selected>120</option>
         </select>
       </div>
       <label class="check">
@@ -129,7 +129,7 @@
         <span>Drone on (harmonium Sa + Pa)</span>
       </label>
       <label for="droneVol">Drone level</label>
-      <input type="range" id="droneVol" min="0" max="100" value="70" />
+      <input type="range" id="droneVol" min="0" max="100" value="30" />
     </div>
 
     <div class="columns">
@@ -143,9 +143,9 @@
         <select id="raga"></select>
         <p class="swaras" id="swara-line"></p>
         <label for="loopVol">Loop level</label>
-        <input type="range" id="loopVol" min="0" max="100" value="50" />
+        <input type="range" id="loopVol" min="0" max="100" value="100" />
         <label for="density">Loop density</label>
-        <input type="range" id="density" min="1" max="5" value="3" />
+        <input type="range" id="density" min="1" max="5" value="5" />
         <p class="swaras" id="density-hint">Sparse at 1 · busier at 5 · biased to vadi/samvadi</p>
       </div>
 
