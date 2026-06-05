@@ -205,6 +205,7 @@
     let tablaSeq = null;
     let loopInterval = null;
     let running = false;
+    let audioReady = false;
     let matraIdx = 0;
 
     const ragaEl = document.getElementById("raga");
@@ -336,10 +337,11 @@
 
     async function ensureAudio() {
       await Tone.start();
-      if (reverb) return;
+      if (audioReady) return;
 
       reverb = new Tone.Reverb({ decay: 9, wet: 0.38 }).toDestination();
-      reverb.roomSize.value = 0.92;
+      await reverb.generate();
+
       droneGain = new Tone.Gain(0).connect(reverb);
       loopGain = new Tone.Gain(0).connect(reverb);
       tablaGain = new Tone.Gain(0).connect(reverb);
@@ -368,6 +370,8 @@
         noise: { type: "white" },
         envelope: { attack: 0.001, decay: 0.04, sustain: 0 },
       }).connect(tablaGain);
+
+      audioReady = true;
     }
 
     function setTransportBpm() {
@@ -442,23 +446,33 @@
     };
 
     document.getElementById("start").onclick = async () => {
-      await ensureAudio();
-      running = true;
-      setTransportBpm();
-      setVolumes();
-      startDrone();
-      scheduleLoop();
+      const startBtn = document.getElementById("start");
+      try {
+        startBtn.disabled = true;
+        statusEl.textContent = "Starting audio…";
+        await ensureAudio();
+        running = true;
+        setTransportBpm();
+        setVolumes();
+        startDrone();
+        scheduleLoop();
 
-      Tone.Transport.stop();
-      Tone.Transport.position = 0;
-      Tone.Transport.start();
-      rebuildTablaSeq();
+        Tone.Transport.stop();
+        Tone.Transport.position = 0;
+        Tone.Transport.start();
+        rebuildTablaSeq();
 
-      document.getElementById("start").disabled = true;
-      document.getElementById("stop").disabled = false;
-      const t = currentTaal();
-      statusEl.textContent = `Playing — ${RAGAS[ragaEl.value].name} · ${t.name} (${t.matras})`;
-      statusEl.classList.add("on");
+        document.getElementById("stop").disabled = false;
+        const t = currentTaal();
+        statusEl.textContent = `Playing — ${RAGAS[ragaEl.value].name} · ${t.name} (${t.matras})`;
+        statusEl.classList.add("on");
+      } catch (err) {
+        console.error(err);
+        running = false;
+        startBtn.disabled = false;
+        statusEl.textContent = "Could not start audio — try again or refresh.";
+        statusEl.classList.remove("on");
+      }
     };
 
     document.getElementById("stop").onclick = () => {
