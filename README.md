@@ -1,6 +1,6 @@
-# Raga Drone — POC
+# Raga Drone
 
-Quick proof of concept: **harmonium-style drone** (Sa + Pa, shruti-aware) + **scale-locked loop** (vadi/samvadi bias, per-raga timbre) + **synthetic tabla taals**.
+**Harmonium-style drone** (Sa + Pa, shruti-aware) + **scale-locked loop** (vadi/samvadi bias, per-raga timbre) + **synthetic tabla taals** — runs in the browser.
 
 ## Run
 
@@ -27,7 +27,7 @@ Independent of [Nakshatra Chakram](https://avinashpeyyety.github.io/nakshatra/) 
 | Kafi | S R g M P D n | mellow | komal Ga, komal Ni |
 | Darbari | S r g m P d n | dark | komal swaras throughout |
 
-Base pitch is **12-TET from Sa**; komal/tivra offsets are **interpretive POC** (not a full shruti engine). Loop notes favor **vadi** and **samvadi**; density 1–5 controls spacing.
+Base pitch is **12-TET from Sa**; komal/tivra offsets are **interpretive** (not a full shruti engine). Loop notes favor **vadi** and **samvadi**; density 1–5 controls spacing.
 
 ## Tabla taals (synthetic)
 
@@ -48,7 +48,7 @@ One bol per matra, synced to **Session tempo (BPM)** via Tone.Transport (optiona
 - **Session** — root (Sa), tempo, harmonium drone on/level  
 - **Raga** | **Tabla** — side-by-side; loop and tabla toggles only
 
-## Not in this POC
+## Roadmap
 
 - Recorded harmonium / tanpura / tabla samples
 - Composed pakad phrases or arohanam/avarohanam rules
