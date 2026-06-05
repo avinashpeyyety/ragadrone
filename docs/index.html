@@ -79,6 +79,11 @@
     <p class="sub">POC — harmonium-style drone, scale loop, tabla taal</p>
 
     <div class="panel">
+      <h2>Raga · Drone</h2>
+      <label class="check">
+        <input type="checkbox" id="ragaOn" checked />
+        <span>Raga on (drone + loop)</span>
+      </label>
       <label for="raga">Raga</label>
       <select id="raga"></select>
       <p class="swaras" id="swara-line"></p>
@@ -384,7 +389,7 @@
         tablaSeq.dispose();
         tablaSeq = null;
       }
-      if (!document.getElementById("tablaOn").checked || !running) return;
+      if (!tablaEnabled() || !running) return;
 
       const t = currentTaal();
       matraIdx = 0;
@@ -402,7 +407,23 @@
       tablaSeq.start(0);
     }
 
+    function ragaEnabled() {
+      return document.getElementById("ragaOn").checked;
+    }
+
+    function tablaEnabled() {
+      return document.getElementById("tablaOn").checked;
+    }
+
+    function stopRaga() {
+      clearInterval(loopInterval);
+      loopInterval = null;
+      if (droneSynth) droneSynth.releaseAll();
+      if (loopSynth) loopSynth.releaseAll();
+    }
+
     function startDrone() {
+      if (!ragaEnabled() || !droneSynth) return;
       const sa = noteName(0);
       const pa = noteName(7);
       const saLow = noteName(-12);
@@ -412,23 +433,31 @@
 
     function scheduleLoop() {
       clearInterval(loopInterval);
+      loopInterval = null;
+      if (!ragaEnabled() || !running) return;
       const bpm = +document.getElementById("tempo").value;
       const density = +document.getElementById("density").value;
       const ms = (60 / bpm) * 1000 * (6 - density) * 0.5;
       loopInterval = setInterval(() => {
-        if (!running) return;
+        if (!running || !ragaEnabled()) return;
         loopSynth.triggerAttackRelease(pickLoopNote(), "8n", Tone.now(), 0.35 + Math.random() * 0.25);
       }, Math.max(180, ms));
     }
 
+    function playbackLabel() {
+      const parts = [];
+      if (ragaEnabled()) parts.push(RAGAS[ragaEl.value].name);
+      if (tablaEnabled()) parts.push(currentTaal().name);
+      return parts.length ? parts.join(" · ") : "nothing enabled";
+    }
+
     function setVolumes() {
       if (!droneGain) return;
-      droneGain.gain.rampTo(+document.getElementById("droneVol").value / 100 * 0.45, 0.2);
-      loopGain.gain.rampTo(+document.getElementById("loopVol").value / 100 * 0.5, 0.2);
+      const raga = ragaEnabled();
+      droneGain.gain.rampTo(raga ? +document.getElementById("droneVol").value / 100 * 0.45 : 0, 0.2);
+      loopGain.gain.rampTo(raga ? +document.getElementById("loopVol").value / 100 * 0.5 : 0, 0.2);
       tablaGain.gain.rampTo(
-        document.getElementById("tablaOn").checked
-          ? +document.getElementById("tablaVol").value / 100 * 0.85
-          : 0,
+        tablaEnabled() ? +document.getElementById("tablaVol").value / 100 * 0.85 : 0,
         0.2
       );
     }
@@ -436,9 +465,21 @@
     ["droneVol", "loopVol", "density", "tablaVol"].forEach((id) => {
       document.getElementById(id).oninput = setVolumes;
     });
+    document.getElementById("ragaOn").onchange = () => {
+      setVolumes();
+      if (!running) return;
+      if (ragaEnabled()) {
+        startDrone();
+        scheduleLoop();
+      } else {
+        stopRaga();
+      }
+      statusEl.textContent = "Playing — " + playbackLabel();
+    };
     document.getElementById("tablaOn").onchange = () => {
       setVolumes();
       if (running) rebuildTablaSeq();
+      if (running) statusEl.textContent = "Playing — " + playbackLabel();
     };
     document.getElementById("tempo").onchange = () => {
       setTransportBpm();
@@ -447,6 +488,10 @@
 
     document.getElementById("start").onclick = async () => {
       const startBtn = document.getElementById("start");
+      if (!ragaEnabled() && !tablaEnabled()) {
+        statusEl.textContent = "Enable Raga and/or Tabla, then press Start.";
+        return;
+      }
       try {
         startBtn.disabled = true;
         statusEl.textContent = "Starting audio…";
@@ -454,17 +499,18 @@
         running = true;
         setTransportBpm();
         setVolumes();
-        startDrone();
-        scheduleLoop();
+        if (ragaEnabled()) {
+          startDrone();
+          scheduleLoop();
+        }
 
         Tone.Transport.stop();
         Tone.Transport.position = 0;
-        Tone.Transport.start();
+        if (tablaEnabled() || ragaEnabled()) Tone.Transport.start();
         rebuildTablaSeq();
 
         document.getElementById("stop").disabled = false;
-        const t = currentTaal();
-        statusEl.textContent = `Playing — ${RAGAS[ragaEl.value].name} · ${t.name} (${t.matras})`;
+        statusEl.textContent = "Playing — " + playbackLabel();
         statusEl.classList.add("on");
       } catch (err) {
         console.error(err);
@@ -494,9 +540,12 @@
 
     ragaEl.onchange = () => {
       updateLines();
-      if (running) startDrone();
+      if (running && ragaEnabled()) startDrone();
+      if (running) statusEl.textContent = "Playing — " + playbackLabel();
     };
-    rootEl.onchange = () => { if (running) startDrone(); };
+    rootEl.onchange = () => {
+      if (running && ragaEnabled()) startDrone();
+    };
   </script>
 </body>
 </html>
