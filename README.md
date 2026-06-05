@@ -39,7 +39,12 @@ Independent of [Nakshatra Chakram](https://avinashpeyyety.github.io/nakshatra/) 
 | Keherwa | 8 |
 | Deepchandi | 14 |
 
-One bol per matra, synced to **Tempo (BPM)** via Tone.Transport. Khali sections use lighter strokes. Not sampled tabla — MembraneSynth + MetalSynth + noise.
+One bol per matra, synced to **Session tempo (BPM)** via Tone.Transport (optional separate tabla tempo). Khali sections use lighter strokes. Not sampled tabla — MembraneSynth + MetalSynth + noise.
+
+## Layout
+
+- **Session** — shared root (Sa) and tempo for loop + tabla  
+- **Raga** | **Tabla** — side-by-side panels; each can toggle loop/tabla and drone (one shared drone sound)
 
 ## Not in this POC
 
