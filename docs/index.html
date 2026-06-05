@@ -76,7 +76,7 @@
 <body>
   <div class="wrap">
     <h1>Raga Drone</h1>
-    <p class="sub">POC — drone, scale loop, tabla taal</p>
+    <p class="sub">POC — harmonium-style drone, scale loop, tabla taal</p>
 
     <div class="panel">
       <label for="raga">Raga</label>
@@ -235,7 +235,7 @@
     function updateLines() {
       const r = RAGAS[ragaEl.value];
       const t = currentTaal();
-      swaraLine.textContent = r.swaras + " · ambient loop in scale";
+      swaraLine.textContent = r.swaras + " · harmonium loop in scale";
       taalLine.textContent = `${t.matras} matras (${t.vibhag}) · ${t.display}`;
     }
     ragaEl.onchange = updateLines;
@@ -298,27 +298,54 @@
       }
     }
 
+    /** Reed-style harmonium: detuned saws, AM, vibrato, chorus, mellow filter. */
+    function makeHarmonium(dest, { drone = false } = {}) {
+      const vib = new Tone.Vibrato({ frequency: 5.5, depth: 0.14, wet: 0.4 });
+      const chorus = new Tone.Chorus({ frequency: 1.2, delayTime: 4, depth: 0.45, wet: 0.35 }).start();
+      const filt = new Tone.Filter({
+        frequency: drone ? 1100 : 1600,
+        type: "lowpass",
+        rolloff: -24,
+        Q: drone ? 1.8 : 2.4,
+      });
+      const trem = new Tone.Tremolo({
+        frequency: drone ? 3.2 : 4.5,
+        depth: drone ? 0.06 : 0.04,
+        wet: drone ? 0.2 : 0.12,
+      }).start();
+
+      const synth = new Tone.PolySynth(Tone.AMSynth, {
+        harmonicity: drone ? 1.6 : 2,
+        oscillator: { type: "sawtooth" },
+        envelope: drone
+          ? { attack: 1.4, decay: 0.4, sustain: 0.9, release: 3.2 }
+          : { attack: 0.06, decay: 0.22, sustain: 0.65, release: 1.1 },
+        modulation: { type: "sine" },
+        modulationEnvelope: {
+          attack: 0.04,
+          decay: 0.15,
+          sustain: drone ? 0.45 : 0.3,
+          release: 0.7,
+        },
+        volume: drone ? -14 : -11,
+      });
+
+      synth.chain(vib, chorus, filt, trem, dest);
+      return synth;
+    }
+
     async function ensureAudio() {
       await Tone.start();
       if (reverb) return;
 
-      reverb = new Tone.Reverb({ decay: 8, wet: 0.42 }).toDestination();
+      reverb = new Tone.Reverb({ decay: 9, wet: 0.38 }).toDestination();
+      reverb.roomSize.value = 0.92;
       droneGain = new Tone.Gain(0).connect(reverb);
       loopGain = new Tone.Gain(0).connect(reverb);
       tablaGain = new Tone.Gain(0).connect(reverb);
 
-      droneSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "sine" },
-        envelope: { attack: 2.5, decay: 0.2, sustain: 0.85, release: 3 },
-      }).connect(droneGain);
-
-      const filter = new Tone.Filter(900, "lowpass");
-      loopSynth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: "triangle" },
-        envelope: { attack: 0.08, decay: 0.3, sustain: 0.15, release: 1.2 },
-        volume: -10,
-      });
-      loopSynth.chain(filter, loopGain);
+      droneSynth = makeHarmonium(droneGain, { drone: true });
+      loopSynth = makeHarmonium(loopGain, { drone: false });
 
       bayan = new Tone.MembraneSynth({
         pitchDecay: 0.008,

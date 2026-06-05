@@ -1,6 +1,6 @@
 # Raga Drone — POC
 
-Quick proof of concept: **tanpura-style drone** (Sa + Pa) + **random ambient notes** locked to a raga scale + **synthetic tabla taals**.
+Quick proof of concept: **harmonium-style drone** (Sa + Pa, reed-like synth) + **scale-locked harmonium phrases** + **synthetic tabla taals**.
 
 ## Run
 
