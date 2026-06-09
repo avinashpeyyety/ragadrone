@@ -1,1 +1,24 @@
-file:///Users/avinashpeyyety/raga-drone/docs/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Raga Drone</title>
+  <style>html,body{margin:0;height:100%;background:#0a0b12}</style>
+</head>
+<body>
+  <script>
+    fetch("https://cdn.jsdelivr.net/gh/avinashpeyyety/ragadrone@f90c59d/docs/index.html")
+      .then((r) => r.text())
+      .then((html) => {
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(() => {
+        document.body.innerHTML =
+          '<p style="color:#e8e6e3;font-family:system-ui;padding:2rem">Could not load Raga Drone. <a href="https://cdn.jsdelivr.net/gh/avinashpeyyety/ragadrone@f90c59d/docs/index.html" style="color:#d4a853">Open app</a></p>';
+      });
+  </script>
+</body>
+</html>
