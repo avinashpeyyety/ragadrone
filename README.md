@@ -2,6 +2,8 @@
 
 **Harmonium-style drone** (Sa + Pa, shruti-aware) + **scale-locked loop** (vadi/samvadi bias, per-raga timbre) + **synthetic tabla taals** — runs in the browser.
 
+**Full music & technical documentation:** [MUSIC.md](MUSIC.md) — raga grammar, shruti, taal/theka, dynamic tabla ornaments, synthesis design, and known limits.
+
 ## Run
 
 **App (HTTPS):** https://avinashpeyyety.github.io/ragadrone/
