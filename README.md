@@ -1,4 +1,4 @@
-# Raga Drone
+# Ragadrone
 
 **Harmonium-style drone** (Sa + Pa, shruti-aware) + **scale-locked loop** (vadi/samvadi bias, per-raga timbre) + **synthetic tabla taals** — runs in the browser.
 
