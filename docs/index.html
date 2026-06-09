@@ -5,9 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Raga Drone</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-  <script src="app.js"></script>
 </head>
 <body>
-  <p>Loading Raga Drone…</p>
+  <p id="boot-status" style="font-family:system-ui,sans-serif;padding:2rem;color:#9a958c;">Loading Raga Drone…</p>
+  <script>
+    (async () => {
+      const status = document.getElementById("boot-status");
+      try {
+        const url = "https://cdn.jsdelivr.net/gh/avinashpeyyety/ragadrone@f90c59d/docs/index.html";
+        const html = await fetch(url).then((r) => {
+          if (!r.ok) throw new Error("fetch " + r.status);
+          return r.text();
+        });
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        for (const node of [...doc.head.children]) {
+          if (node.tagName === "STYLE") document.head.appendChild(node.cloneNode(true));
+        }
+        document.body.innerHTML = doc.body.innerHTML;
+        for (const s of doc.querySelectorAll("body script")) {
+          const el = document.createElement("script");
+          el.textContent = s.textContent;
+          document.body.appendChild(el);
+        }
+        status.remove();
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Could not load Raga Drone. Double-click DEPLOY_NOW.command in the ragadrone folder.";
+      }
+    })();
+  </script>
 </body>
 </html>
