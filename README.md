@@ -4,12 +4,12 @@
 
 ## Run
 
-**App (HTTPS):** https://avinashpeyyety.github.io/raga-drone/
+**App (HTTPS):** https://avinashpeyyety.github.io/ragadrone/
 
 **Local:**
 
 ```bash
-cd raga-drone
+cd ragadrone
 python3 -m http.server 8766
 ```
 
