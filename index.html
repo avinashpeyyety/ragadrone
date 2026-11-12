@@ -52,12 +52,32 @@
     .ornament-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 0.5rem; margin-bottom: 0.75rem; }
     .ornament-grid .check { margin-bottom: 0.25rem; }
     .ornament-grid .check span { font-size: 0.78rem; }
+    .about { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+    .about summary { cursor: pointer; color: var(--gold); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .about p { margin: 0.6rem 0 0.4rem; }
+    .about ul { margin: 0.25rem 0 0.5rem 1.1rem; }
+    .about li { margin-bottom: 0.2rem; }
+    .about a { color: var(--saffron); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Raga Drone</h1>
     <p class="sub">Harmonium-style drone, scale loop, and tabla taal — in your browser</p>
+    <details class="panel about" id="about">
+      <summary>What this is / isn’t</summary>
+      <p><strong>It is</strong> a riyaz (practice) companion: a Sa–Pa drone, a loop of the raga’s swaras weighted toward vadi and samvadi, and a synthetic tabla theka with optional ornaments, all generated live in the browser.</p>
+      <p><strong>It isn’t</strong> a performance of the raga. Known limits:</p>
+      <ul>
+        <li>Melody: no meend, gamak or pakad; random swaras are not the raga’s chalan.</li>
+        <li>Shruti: a sparse cents map, not a 22-śruti or raga-specific tuning.</li>
+        <li>Drone: fixed Sa–Pa, with no per-raga Ma or Ni drone.</li>
+        <li>Tabla: synthetic strokes; no bayan glides, gharana thekas or dayan tuned per raga.</li>
+        <li>Taal: a rigid matra grid; no layakari across matras or fractional matras.</li>
+        <li>Ornaments, tihai and mukhra: weighted at random, so a tihai is not guaranteed to land on sam.</li>
+      </ul>
+      <p>Details: <a href="https://github.com/avinashpeyyety/ragadrone/blob/main/MUSIC.md#9-known-simplifications-honest-limits">MUSIC.md §9</a>.</p>
+    </details>
     <div class="panel">
       <h2>Session</h2>
       <div class="row">
